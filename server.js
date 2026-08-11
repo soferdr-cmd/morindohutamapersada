@@ -8,7 +8,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Endpoint Setup Database
+// Setup & Membuat Semua Tabel Database
 app.get('/api/setup', async (req, res) => {
   try {
     await db.query(`
@@ -34,6 +34,16 @@ app.get('/api/setup', async (req, res) => {
     `);
 
     await db.query(`
+      CREATE TABLE IF NOT EXISTS orders (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        customer_id INT,
+        jenis_layanan VARCHAR(100),
+        total_harga DECIMAL(15,2),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await db.query(`
       CREATE TABLE IF NOT EXISTS daily_logs (
         id INT AUTO_INCREMENT PRIMARY KEY,
         tanggal DATE,
@@ -47,19 +57,18 @@ app.get('/api/setup', async (req, res) => {
       )
     `);
 
-    res.json({ message: "✅ Berhasil! Semua tabel siap digunakan." });
+    res.json({ message: "✅ Berhasil! Semua tabel (Customers, KPI, Orders, Daily Logs) siap digunakan." });
   } catch (error) {
     console.error("Error Setup Database:", error);
     res.status(500).json({ error: "Gagal membuat tabel", detail: error.message });
   }
 });
 
-// Endpoint Ping
 app.get('/api/ping', (req, res) => {
   res.json({ message: "Server hidup dan berjalan normal! 🚀" });
 });
 
-// --- API CUSTOMERS ---
+// --- CUSTOMERS API ---
 app.get('/api/customers', async (req, res) => {
   try {
     const [rows] = await db.query('SELECT * FROM customers ORDER BY id DESC');
@@ -82,7 +91,58 @@ app.post('/api/customers', async (req, res) => {
   }
 });
 
-// --- API DAILY LOGS ---
+// --- KPI TARGETS API ---
+app.get('/api/kpi-targets', async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT * FROM kpi_targets ORDER BY id DESC');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/kpi-targets', async (req, res) => {
+  try {
+    const { divisi, indikator, target, realisasi, status } = req.body;
+    const [result] = await db.query(
+      'INSERT INTO kpi_targets (divisi, indikator, target, realisasi, status) VALUES (?, ?, ?, ?, ?)',
+      [divisi, indikator, target, realisasi, status || 'Pending']
+    );
+    res.json({ success: true, id: result.insertId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- ORDERS API ---
+app.get('/api/orders', async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT o.*, c.nama_pelanggan 
+      FROM orders o 
+      LEFT JOIN customers c ON o.customer_id = c.id 
+      ORDER BY o.id DESC
+    `);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/orders', async (req, res) => {
+  try {
+    const { customer_id, jenis_layanan, total_harga } = req.body;
+    const [result] = await db.query(
+      'INSERT INTO orders (customer_id, jenis_layanan, total_harga) VALUES (?, ?, ?)',
+      [customer_id, jenis_layanan, total_harga]
+    );
+    res.json({ success: true, id: result.insertId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- DAILY LOGS API ---
 app.get('/api/daily-logs', async (req, res) => {
   try {
     const query = `
