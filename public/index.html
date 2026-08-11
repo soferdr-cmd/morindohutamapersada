@@ -3,29 +3,281 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Morindo Hutama Persada - Sistem</title>
+  <title>Morindo Hutama Persada - Dashboard</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 40px; background: #f4f7f6; color: #333; }
-    .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    h1 { color: #0284c7; }
-    .status { padding: 10px; background: #e0f2fe; border-left: 4px solid #0284c7; margin-bottom: 20px; }
+    :root { primary: #0284c7; bg: #f8fafc; text: #1e293b; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: var(--bg); color: var(--text); }
+    header { background: #0f172a; color: white; padding: 20px; text-align: center; }
+    nav { display: flex; justify-content: center; background: #1e293b; padding: 10px; gap: 15px; }
+    nav button { background: none; border: none; color: #94a3b8; font-size: 16px; cursor: pointer; padding: 8px 16px; border-radius: 4px; }
+    nav button.active, nav button:hover { background: #0284c7; color: white; }
+    .container { max-width: 1000px; margin: 30px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    h2 { color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-top: 0; }
+    form { display: grid; gap: 15px; margin-bottom: 30px; background: #f1f5f9; padding: 20px; border-radius: 8px; }
+    input, select, textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
+    button.submit-btn { background: #0284c7; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    button.submit-btn:hover { background: #0369a1; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { border: 1px solid #e2e8f0; padding: 12px; text-align: left; font-size: 14px; }
+    th { background: #f1f5f9; }
   </style>
 </head>
 <body>
+
+  <header>
+    <h1>PT Morindo Hutama Persada</h1>
+    <p>Sistem Manajemen Operasional & Laporan Terpadu</p>
+  </header>
+
+  <nav>
+    <button class="tab-btn active" onclick="switchTab(event, 'customers-tab')">Pelanggan</button>
+    <button class="tab-btn" onclick="switchTab(event, 'logs-tab')">Laporan Harian</button>
+    <button class="tab-btn" onclick="switchTab(event, 'kpi-tab')">Target KPI</button>
+    <button class="tab-btn" onclick="switchTab(event, 'orders-tab')">Order & Layanan</button>
+  </nav>
+
   <div class="container">
-    <h1>Morindo Hutama Persada</h1>
-    <div class="status" id="server-status">Memeriksa koneksi server...</div>
+
+    <!-- 1. TAB CUSTOMERS -->
+    <div id="customers-tab" class="tab-content active">
+      <h2>Manajemen Pelanggan</h2>
+      <form id="customer-form">
+        <input type="text" id="nama_pelanggan" placeholder="Nama Pelanggan / Perusahaan" required>
+        <input type="text" id="kategori_pelanggan" placeholder="Kategori (Contoh: Industri / Perorangan)">
+        <input type="text" id="no_telepon" placeholder="Nomor Telepon">
+        <button type="submit" class="submit-btn">Simpan Pelanggan</button>
+      </form>
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Nama Pelanggan</th><th>Kategori</th><th>No Telepon</th></tr>
+        </thead>
+        <tbody id="customer-table-body"><tr><td colspan="4">Memuat data...</td></tr></tbody>
+      </table>
+    </div>
+
+    <!-- 2. TAB DAILY LOGS -->
+    <div id="logs-tab" class="tab-content">
+      <h2>Laporan Harian Pekerjaan</h2>
+      <form id="log-form">
+        <input type="date" id="log-tanggal" required>
+        <select id="log-customer-id" required><option value="">Pilih Pelanggan</option></select>
+        <input type="text" id="log-kategori" placeholder="Kategori Pekerjaan (Contoh: Maintenance)" required>
+        <select id="log-status">
+          <option value="Pending">Pending</option>
+          <option value="Proses">Proses</option>
+          <option value="Selesai">Selesai</option>
+        </select>
+        <textarea id="log-uraian" placeholder="Uraian Kegiatan" rows="3" required></textarea>
+        <textarea id="log-kendala" placeholder="Kendala (Jika ada)" rows="2"></textarea>
+        <textarea id="log-tindak-lanjut" placeholder="Tindak Lanjut" rows="2"></textarea>
+        <button type="submit" class="submit-btn">Kirim Laporan</button>
+      </form>
+      <table>
+        <thead>
+          <tr><th>Tanggal</th><th>Pelanggan</th><th>Kategori</th><th>Status</th><th>Uraian Kegiatan</th></tr>
+        </thead>
+        <tbody id="log-table-body"><tr><td colspan="5">Memuat data...</td></tr></tbody>
+      </table>
+    </div>
+
+    <!-- 3. TAB KPI TARGETS -->
+    <div id="kpi-tab" class="tab-content">
+      <h2>Target KPI Divisi</h2>
+      <form id="kpi-form">
+        <input type="text" id="kpi-divisi" placeholder="Nama Divisi" required>
+        <input type="text" id="kpi-indikator" placeholder="Indikator Kinerja" required>
+        <input type="text" id="kpi-target" placeholder="Target (Contoh: 100 Unit)" required>
+        <input type="text" id="kpi-realisasi" placeholder="Realisasi Saat Ini" required>
+        <select id="kpi-status">
+          <option value="Pending">Pending</option>
+          <option value="On Track">On Track</option>
+          <option value="Tercapai">Tercapai</option>
+        </select>
+        <button type="submit" class="submit-btn">Simpan KPI</button>
+      </form>
+      <table>
+        <thead>
+          <tr><th>Divisi</th><th>Indikator</th><th>Target</th><th>Realisasi</th><th>Status</th></tr>
+        </thead>
+        <tbody id="kpi-table-body"><tr><td colspan="5">Memuat data...</td></tr></tbody>
+      </table>
+    </div>
+
+    <!-- 4. TAB ORDERS -->
+    <div id="orders-tab" class="tab-content">
+      <h2>Layanan & Transaksi Order</h2>
+      <form id="order-form">
+        <select id="order-customer-id" required><option value="">Pilih Pelanggan</option></select>
+        <input type="text" id="order-layanan" placeholder="Jenis Layanan (Contoh: Servis Generator)" required>
+        <input type="number" id="order-harga" placeholder="Total Harga (Rp)" required>
+        <button type="submit" class="submit-btn">Simpan Order</button>
+      </form>
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Pelanggan</th><th>Jenis Layanan</th><th>Total Harga</th></tr>
+        </thead>
+        <tbody id="order-table-body"><tr><td colspan="4">Memuat data...</td></tr></tbody>
+      </table>
+    </div>
+
   </div>
 
   <script>
-    fetch('/api/ping')
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById('server-status').innerText = "Status: " + data.message;
-      })
-      .catch(err => {
-        document.getElementById('server-status').innerText = "Gagal terhubung ke server.";
+    function switchTab(evt, tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      evt.currentTarget.classList.add('active');
+    }
+
+    // Load Data Functions
+    async function loadCustomers() {
+      try {
+        const res = await fetch('/api/customers');
+        const data = await res.json();
+        const tbody = document.getElementById('customer-table-body');
+        const selectLogs = document.getElementById('log-customer-id');
+        const selectOrders = document.getElementById('order-customer-id');
+        
+        tbody.innerHTML = '';
+        selectLogs.innerHTML = '<option value="">Pilih Pelanggan</option>';
+        selectOrders.innerHTML = '<option value="">Pilih Pelanggan</option>';
+
+        if(data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4">Belum ada data pelanggan.</td></tr>';
+          return;
+        }
+
+        data.forEach(c => {
+          tbody.innerHTML += `<tr><td>${c.id}</td><td>${c.nama_pelanggan}</td><td>${c.kategori_pelanggan || '-'}</td><td>${c.no_telepon || '-'}</td></tr>`;
+          selectLogs.innerHTML += `<option value="${c.id}">${c.nama_pelanggan}</option>`;
+          selectOrders.innerHTML += `<option value="${c.id}">${c.nama_pelanggan}</option>`;
+        });
+      } catch(e) { console.error(e); }
+    }
+
+    async function loadDailyLogs() {
+      try {
+        const res = await fetch('/api/daily-logs');
+        const data = await res.json();
+        const tbody = document.getElementById('log-table-body');
+        tbody.innerHTML = '';
+        if(data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5">Belum ada laporan harian.</td></tr>';
+          return;
+        }
+        data.forEach(l => {
+          tbody.innerHTML += `<tr><td>${l.tanggal ? l.tanggal.substring(0,10) : '-'}</td><td>${l.nama_pelanggan || '-'}</td><td>${l.kategori_pekerjaan}</td><td>${l.status_pekerjaan}</td><td>${l.uraian_kegiatan}</td></tr>`;
+        });
+      } catch(e) { console.error(e); }
+    }
+
+    async function loadKpi() {
+      try {
+        const res = await fetch('/api/kpi-targets');
+        const data = await res.json();
+        const tbody = document.getElementById('kpi-table-body');
+        tbody.innerHTML = '';
+        if(data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5">Belum ada data KPI.</td></tr>';
+          return;
+        }
+        data.forEach(k => {
+          tbody.innerHTML += `<tr><td>${k.divisi}</td><td>${k.indikator}</td><td>${k.target}</td><td>${k.realisasi}</td><td>${k.status}</td></tr>`;
+        });
+      } catch(e) { console.error(e); }
+    }
+
+    async function loadOrders() {
+      try {
+        const res = await fetch('/api/orders');
+        const data = await res.json();
+        const tbody = document.getElementById('order-table-body');
+        tbody.innerHTML = '';
+        if(data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4">Belum ada data order.</td></tr>';
+          return;
+        }
+        data.forEach(o => {
+          tbody.innerHTML += `<tr><td>${o.id}</td><td>${o.nama_pelanggan || '-'}</td><td>${o.jenis_layanan}</td><td>Rp ${Number(o.total_harga).toLocaleString('id-ID')}</td></tr>`;
+        });
+      } catch(e) { console.error(e); }
+    }
+
+    // Form Submissions
+    document.getElementById('customer-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await fetch('/api/customers', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          nama_pelanggan: document.getElementById('nama_pelanggan').value,
+          kategori_pelanggan: document.getElementById('kategori_pelanggan').value,
+          no_telepon: document.getElementById('no_telepon').value
+        })
       });
+      e.target.reset();
+      loadCustomers();
+    });
+
+    document.getElementById('log-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await fetch('/api/daily-logs', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          tanggal: document.getElementById('log-tanggal').value,
+          customer_id: document.getElementById('log-customer-id').value,
+          kategori_pekerjaan: document.getElementById('log-kategori').value,
+          status_pekerjaan: document.getElementById('log-status').value,
+          uraian_kegiatan: document.getElementById('log-uraian').value,
+          kendala: document.getElementById('log-kendala').value,
+          tindak_lanjut: document.getElementById('log-tindak-lanjut').value
+        })
+      });
+      e.target.reset();
+      loadDailyLogs();
+    });
+
+    document.getElementById('kpi-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await fetch('/api/kpi-targets', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          divisi: document.getElementById('kpi-divisi').value,
+          indikator: document.getElementById('kpi-indikator').value,
+          target: document.getElementById('kpi-target').value,
+          realisasi: document.getElementById('kpi-realisasi').value,
+          status: document.getElementById('kpi-status').value
+        })
+      });
+      e.target.reset();
+      loadKpi();
+    });
+
+    document.getElementById('order-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await fetch('/api/orders', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          customer_id: document.getElementById('order-customer-id').value,
+          jenis_layanan: document.getElementById('order-layanan').value,
+          total_harga: document.getElementById('order-harga').value
+        })
+      });
+      e.target.reset();
+      loadOrders();
+    });
+
+    // Initial Load
+    loadCustomers();
+    loadDailyLogs();
+    loadKpi();
+    loadOrders();
   </script>
 </body>
 </html>
