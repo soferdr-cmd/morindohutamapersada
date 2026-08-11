@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Morindo Hutama Persada - Sistem</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; background: #f4f7f6; color: #333; }
+    .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    h1 { color: #0284c7; }
+    .status { padding: 10px; background: #e0f2fe; border-left: 4px solid #0284c7; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Morindo Hutama Persada</h1>
+    <div class="status" id="server-status">Memeriksa koneksi server...</div>
+  </div>
+
+  <script>
+    fetch('/api/ping')
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('server-status').innerText = "Status: " + data.message;
+      })
+      .catch(err => {
+        document.getElementById('server-status').innerText = "Gagal terhubung ke server.";
+      });
+  </script>
+</body>
+</html>
