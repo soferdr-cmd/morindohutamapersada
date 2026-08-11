@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Morindo Hutama Persada - Dashboard</title>
   <style>
-    :root { primary: #0284c7; bg: #f8fafc; text: #1e293b; }
+    :root { --primary: #0284c7; --bg: #f8fafc; --text: #1e293b; }
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: var(--bg); color: var(--text); }
     header { background: #0f172a; color: white; padding: 20px; text-align: center; }
-    nav { display: flex; justify-content: center; background: #1e293b; padding: 10px; gap: 15px; }
+    nav { display: flex; justify-content: center; background: #1e293b; padding: 10px; gap: 15px; flex-wrap: wrap; }
     nav button { background: none; border: none; color: #94a3b8; font-size: 16px; cursor: pointer; padding: 8px 16px; border-radius: 4px; }
     nav button.active, nav button:hover { background: #0284c7; color: white; }
     .container { max-width: 1000px; margin: 30px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
@@ -22,20 +22,34 @@
     table { width: 100%; border-collapse: collapse; margin-top: 15px; }
     th, td { border: 1px solid #e2e8f0; padding: 12px; text-align: left; font-size: 14px; }
     th { background: #f1f5f9; }
+    .print-btn { background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+    .print-btn:hover { background: #059669; }
+
+    /* Modal / Tampilan Invoice Cetak */
+    #invoice-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+    .invoice-box { background: white; padding: 40px; width: 700px; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.2); position: relative; }
+    .invoice-header { display: flex; justify-content: space-between; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
+    .invoice-footer { margin-top: 30px; display: flex; justify-content: space-between; align-items: center; }
+    @media print {
+      body * { visibility: hidden; }
+      #invoice-modal, #invoice-modal * { visibility: visible; }
+      #invoice-modal { position: absolute; left: 0; top: 0; width: 100%; background: white; box-shadow: none; }
+      .no-print { display: none; }
+    }
   </style>
 </head>
 <body>
 
   <header>
     <h1>PT Morindo Hutama Persada</h1>
-    <p>Sistem Manajemen Operasional & Laporan Terpadu</p>
+    <p>Sistem Manajemen Operasional & Pencetakan Invoice</p>
   </header>
 
   <nav>
     <button class="tab-btn active" onclick="switchTab(event, 'customers-tab')">Pelanggan</button>
     <button class="tab-btn" onclick="switchTab(event, 'logs-tab')">Laporan Harian</button>
     <button class="tab-btn" onclick="switchTab(event, 'kpi-tab')">Target KPI</button>
-    <button class="tab-btn" onclick="switchTab(event, 'orders-tab')">Order & Layanan</button>
+    <button class="tab-btn" onclick="switchTab(event, 'orders-tab')">Order & Invoice</button>
   </nav>
 
   <div class="container">
@@ -105,23 +119,74 @@
       </table>
     </div>
 
-    <!-- 4. TAB ORDERS -->
+    <!-- 4. TAB ORDERS & INVOICE -->
     <div id="orders-tab" class="tab-content">
-      <h2>Layanan & Transaksi Order</h2>
+      <h2>Transaksi Order & Cetak Invoice</h2>
       <form id="order-form">
         <select id="order-customer-id" required><option value="">Pilih Pelanggan</option></select>
-        <input type="text" id="order-layanan" placeholder="Jenis Layanan (Contoh: Servis Generator)" required>
+        <input type="text" id="order-layanan" placeholder="Jenis Layanan / Barang (Contoh: Servis Generator)" required>
         <input type="number" id="order-harga" placeholder="Total Harga (Rp)" required>
         <button type="submit" class="submit-btn">Simpan Order</button>
       </form>
       <table>
         <thead>
-          <tr><th>ID</th><th>Pelanggan</th><th>Jenis Layanan</th><th>Total Harga</th></tr>
+          <tr><th>ID</th><th>Pelanggan</th><th>Jenis Layanan</th><th>Total Harga</th><th>Aksi</th></tr>
         </thead>
-        <tbody id="order-table-body"><tr><td colspan="4">Memuat data...</td></tr></tbody>
+        <tbody id="order-table-body"><tr><td colspan="5">Memuat data...</td></tr></tbody>
       </table>
     </div>
 
+  </div>
+
+  <!-- MODAL INVOICE PRINT -->
+  <div id="invoice-modal">
+    <div class="invoice-box">
+      <div class="invoice-header">
+        <div>
+          <h2>PT MORINDO HUTAMA PERSADA</h2>
+          <p style="margin:2px 0; color:#555; font-size:13px;">Sistem Layanan & Perawatan Profesional</p>
+        </div>
+        <div style="text-align: right;">
+          <h3 style="color:#0284c7; margin:0;">INVOICE</h3>
+          <p id="inv-id" style="margin:5px 0; font-weight:bold;"></p>
+          <p id="inv-date" style="margin:0; font-size:13px; color:#555;"></p>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <p style="margin:2px 0; font-size:13px; color:#555;">Kepada Yth:</p>
+        <h4 id="inv-customer" style="margin:5px 0;"></h4>
+        <p id="inv-phone" style="margin:2px 0; font-size:13px; color:#555;"></p>
+      </div>
+
+      <table style="margin-bottom: 20px;">
+        <thead>
+          <tr><th>Deskripsi Layanan / Transaksi</th><th style="text-align: right;">Subtotal</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td id="inv-service"></td>
+            <td id="inv-price" style="text-align: right;"></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="text-align: right; margin-bottom: 30px;">
+        <h3>Total Tagihan: <span id="inv-total" style="color: #0284c7;"></span></h3>
+      </div>
+
+      <div class="invoice-footer">
+        <div>
+          <p style="margin:0; font-size:13px; color:#555;">Hormat Kami,</p>
+          <br><br>
+          <p style="margin:0; font-weight:bold;">( Manajemen Morindo )</p>
+        </div>
+        <div class="no-print" style="display: flex; gap: 10px;">
+          <button onclick="window.print()" class="submit-btn" style="background: #10b981;">Cetak / Print</button>
+          <button onclick="closeInvoice()" style="background: #64748b; color:white; border:none; padding:10px 15px; border-radius:6px; cursor:pointer;">Tutup</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -132,7 +197,6 @@
       evt.currentTarget.classList.add('active');
     }
 
-    // Load Data Functions
     async function loadCustomers() {
       try {
         const res = await fetch('/api/customers');
@@ -197,13 +261,45 @@
         const tbody = document.getElementById('order-table-body');
         tbody.innerHTML = '';
         if(data.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="4">Belum ada data order.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="5">Belum ada data order.</td></tr>';
           return;
         }
         data.forEach(o => {
-          tbody.innerHTML += `<tr><td>${o.id}</td><td>${o.nama_pelanggan || '-'}</td><td>${o.jenis_layanan}</td><td>Rp ${Number(o.total_harga).toLocaleString('id-ID')}</td></tr>`;
+          const formattedPrice = `Rp ${Number(o.total_harga).toLocaleString('id-ID')}`;
+          tbody.innerHTML += `<tr>
+            <td>#${o.id}</td>
+            <td>${o.nama_pelanggan || '-'}</td>
+            <td>${o.jenis_layanan}</td>
+            <td>${formattedPrice}</td>
+            <td><button class="print-btn" onclick="openInvoice(${o.id})">Cetak Invoice</button></td>
+          </tr>`;
         });
       } catch(e) { console.error(e); }
+    }
+
+    async function openInvoice(orderId) {
+      try {
+        const res = await fetch(`/api/orders/${orderId}`);
+        const order = await res.json();
+        
+        document.getElementById('inv-id').innerText = `No: INV-${order.id}`;
+        document.getElementById('inv-date').innerText = `Tanggal: ${order.created_at ? order.created_at.substring(0,10) : '-'}`;
+        document.getElementById('inv-customer').innerText = order.nama_pelanggan || 'Pelanggan Umum';
+        document.getElementById('inv-phone').innerText = `No. Telp: ${order.no_telepon || '-'}`;
+        document.getElementById('inv-service').innerText = order.jenis_layanan;
+        
+        const formatted = `Rp ${Number(order.total_harga).toLocaleString('id-ID')}`;
+        document.getElementById('inv-price').innerText = formatted;
+        document.getElementById('inv-total').innerText = formatted;
+
+        document.getElementById('invoice-modal').style.display = 'flex';
+      } catch(e) {
+        alert('Gagal memuat detail invoice');
+      }
+    }
+
+    function closeInvoice() {
+      document.getElementById('invoice-modal').style.display = 'none';
     }
 
     // Form Submissions
