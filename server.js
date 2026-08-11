@@ -57,7 +57,7 @@ app.get('/api/setup', async (req, res) => {
       )
     `);
 
-    res.json({ message: "✅ Berhasil! Semua tabel (Customers, KPI, Orders, Daily Logs) siap digunakan." });
+    res.json({ message: "✅ Berhasil! Semua tabel siap digunakan." });
   } catch (error) {
     console.error("Error Setup Database:", error);
     res.status(500).json({ error: "Gagal membuat tabel", detail: error.message });
@@ -118,12 +118,30 @@ app.post('/api/kpi-targets', async (req, res) => {
 app.get('/api/orders', async (req, res) => {
   try {
     const [rows] = await db.query(`
-      SELECT o.*, c.nama_pelanggan 
+      SELECT o.*, c.nama_pelanggan, c.no_telepon, c.kategori_pelanggan 
       FROM orders o 
       LEFT JOIN customers c ON o.customer_id = c.id 
       ORDER BY o.id DESC
     `);
     res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/orders/:id', async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT o.*, c.nama_pelanggan, c.no_telepon, c.kategori_pelanggan 
+      FROM orders o 
+      LEFT JOIN customers c ON o.customer_id = c.id 
+      WHERE o.id = ?
+    `, [req.params.id]);
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Order tidak ditemukan" });
+    }
+    res.json(rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
