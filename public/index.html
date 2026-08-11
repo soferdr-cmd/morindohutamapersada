@@ -269,7 +269,7 @@
           tbody.innerHTML += `<tr>
             <td>#${o.id}</td>
             <td>${o.nama_pelanggan || '-'}</td>
-            <td>${o.jenis_layanan}</td>
+            <td>${o.jenis_layanan || '-'}</td>
             <td>${formattedPrice}</td>
             <td><button class="print-btn" onclick="openInvoice(${o.id})">Cetak Invoice</button></td>
           </tr>`;
@@ -286,7 +286,7 @@
         document.getElementById('inv-date').innerText = `Tanggal: ${order.created_at ? order.created_at.substring(0,10) : '-'}`;
         document.getElementById('inv-customer').innerText = order.nama_pelanggan || 'Pelanggan Umum';
         document.getElementById('inv-phone').innerText = `No. Telp: ${order.no_telepon || '-'}`;
-        document.getElementById('inv-service').innerText = order.jenis_layanan;
+        document.getElementById('inv-service').innerText = order.jenis_layanan || '-';
         
         const formatted = `Rp ${Number(order.total_harga).toLocaleString('id-ID')}`;
         document.getElementById('inv-price').innerText = formatted;
